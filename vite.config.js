@@ -14,4 +14,12 @@ export default defineConfig({
       }
     }
   },
+  resolve: {
+    alias: {
+      crypto: 'crypto-js'
+    }
+  },
+  define: {
+    'process.env': {}
+  }
 })
