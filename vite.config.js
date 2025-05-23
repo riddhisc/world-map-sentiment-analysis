@@ -7,5 +7,11 @@ export default defineConfig({
   base: '/world-map-sentiment-analysis/',
   build: {
     outDir: 'build',
+    assetsDir: 'assets',
+    rollupOptions: {
+      output: {
+        manualChunks: undefined
+      }
+    }
   },
 })
