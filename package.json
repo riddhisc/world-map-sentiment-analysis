@@ -1,13 +1,16 @@
 {
-  "name": "my-react-app",
+  "name": "world-map-sentiment-analysis",
   "private": true,
   "version": "0.0.0",
   "type": "module",
+  "homepage": "https://riddhisc.github.io/world-map-sentiment-analysis",
   "scripts": {
     "dev": "vite",
     "build": "vite build",
     "lint": "eslint .",
-    "preview": "vite preview"
+    "preview": "vite preview",
+    "predeploy": "npm run build",
+    "deploy": "gh-pages -d build"
   },
   "dependencies": {
     "d3-geo": "^3.1.1",
