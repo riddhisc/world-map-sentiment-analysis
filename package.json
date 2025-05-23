@@ -6,12 +6,10 @@
   "homepage": "https://riddhisc.github.io/world-map-sentiment-analysis",
   "scripts": {
     "dev": "vite",
-    "build": "node build-script.js",
-    "build:vite": "vite build",
+    "build": "vite build",
     "lint": "eslint .",
     "preview": "vite preview",
-    "predeploy": "npm run build",
-    "deploy": "gh-pages -d build"
+    "deploy:manual": "node deploy.js"
   },
   "dependencies": {
     "crypto-js": "^4.2.0",
