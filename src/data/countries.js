@@ -1,30 +1,15 @@
 import worldAtlas from 'world-atlas/countries-110m.json'
-import worldCountries from 'world-countries/countries.json'
-
-const isoByNumericId = Object.fromEntries(
-  worldCountries.map((country) => [country.ccn3, country]),
-)
-
-const regionFor = (country) => {
-  if (!country) return 'Other'
-  if (country.cca3 === 'SAU') return 'Middle East'
-  if (country.region === 'Africa') return 'Africa'
-  if (country.region === 'Europe') return 'Europe'
-  if (country.region === 'Oceania') return 'Oceania'
-  if (country.region === 'Asia') return 'Asia'
-  if (country.region === 'Americas') return country.subregion === 'South America' ? 'South America' : 'North America'
-  return 'Other'
-}
+import metadata from './countryMetadata.generated.js'
 
 const atlasCountries = worldAtlas.objects.countries.geometries.map((geometry) => {
   const numericId = String(geometry.id).padStart(3, '0')
-  const metadata = isoByNumericId[numericId]
+  const countryMetadata = metadata.find((item) => item.numericId === numericId)
   return {
-    name: metadata?.name.common || geometry.properties?.name || 'Unknown country',
-    iso2: metadata?.cca2 || '',
-    iso3: metadata?.cca3 || '',
+    name: countryMetadata?.name || geometry.properties?.name || 'Unknown country',
+    iso2: countryMetadata?.iso2 || '',
+    iso3: countryMetadata?.iso3 || '',
     numericId,
-    region: regionFor(metadata),
+    region: countryMetadata?.region || 'Other',
   }
 })
 
