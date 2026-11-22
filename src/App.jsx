@@ -22,6 +22,7 @@ function App() {
   const [tooltipData, setTooltipData] = useState(null)
   const [hoveredRegion, setHoveredRegion] = useState(null)
   const [selectedCountry, setSelectedCountry] = useState(null)
+  const [resetKey, setResetKey] = useState(0)
   const leaveTimeout = useRef(null)
 
   const regions = useMemo(() => [...new Set(sentimentData.map((country) => country.region))].sort(), [])
@@ -62,6 +63,7 @@ function App() {
     setTooltipData(null)
     setHoveredRegion(null)
     setSelectedCountry(null)
+    setResetKey((value) => value + 1)
   }, [])
 
   const handleClick = useCallback((geo) => {
@@ -87,7 +89,7 @@ function App() {
               onHover={handleHover}
               onLeave={handleLeave}
               onClick={handleClick}
-              onReset={handleReset}
+              resetKey={resetKey}
             />
             {hoveredCountry && tooltipData && <CountryTooltip country={hoveredCountry} sentimentData={tooltipData} />}
             <Legend sentimentType={activeSentiment} />

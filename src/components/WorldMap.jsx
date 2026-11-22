@@ -3,13 +3,19 @@ import { geoEqualEarth, geoPath } from 'd3-geo'
 import { zoom, zoomIdentity } from 'd3-zoom'
 import { select } from 'd3-selection'
 
-const INITIAL_TRANSFORM = { x: 0, y: 0, k: 1 }
+const INITIAL_ZOOM = 1.8
 
-function WorldMap({ features, getCountryInfo, onHover, onLeave, onClick, onReset }) {
+const initialTransform = (width, height) => ({
+  x: width * (1 - INITIAL_ZOOM) / 2,
+  y: height * (1 - INITIAL_ZOOM) / 2,
+  k: INITIAL_ZOOM,
+})
+
+function WorldMap({ features, getCountryInfo, onHover, onLeave, onClick, resetKey }) {
   const svgRef = useRef(null)
   const zoomRef = useRef(null)
   const [size, setSize] = useState({ width: 900, height: 450 })
-  const [transform, setTransform] = useState(INITIAL_TRANSFORM)
+  const [transform, setTransform] = useState(() => initialTransform(900, 450))
 
   useEffect(() => {
     const element = svgRef.current
@@ -35,15 +41,19 @@ function WorldMap({ features, getCountryInfo, onHover, onLeave, onClick, onReset
         setTransform({ x: next.x, y: next.y, k: next.k })
       })
     zoomRef.current = behavior
-    selection.call(behavior)
+    selection.call(behavior).call(behavior.transform, zoomIdentity
+      .translate(size.width * (1 - INITIAL_ZOOM) / 2, size.height * (1 - INITIAL_ZOOM) / 2)
+      .scale(INITIAL_ZOOM))
     return () => selection.on('.zoom', null)
   }, [size])
 
   useEffect(() => {
     if (!zoomRef.current || !svgRef.current) return
-    select(svgRef.current).call(zoomRef.current.transform, zoomIdentity)
-    onReset?.()
-  }, [onReset])
+    const next = zoomIdentity
+      .translate(size.width * (1 - INITIAL_ZOOM) / 2, size.height * (1 - INITIAL_ZOOM) / 2)
+      .scale(INITIAL_ZOOM)
+    select(svgRef.current).call(zoomRef.current.transform, next)
+  }, [resetKey, size])
 
   const projection = geoEqualEarth().fitSize([size.width, size.height], {
     type: 'FeatureCollection',
