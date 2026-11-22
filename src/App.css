@@ -243,6 +243,43 @@ svg {
   z-index: 1000;
 }
 
+.legend-title {
+  font-weight: 600;
+  text-align: center;
+  text-transform: uppercase;
+  border-bottom: 2px solid var(--secondary-color);
+  padding-bottom: 6px;
+}
+
+.legend-gradient {
+  height: 14px;
+  min-width: 170px;
+  border-radius: 5px;
+  border: 1px solid rgba(44, 62, 80, 0.18);
+}
+
+.legend-scale {
+  display: flex;
+  justify-content: space-between;
+  color: var(--light-text);
+  font-size: 11px;
+}
+
+.legend-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  color: var(--text-color);
+  font-size: 12px;
+}
+
+.legend-no-data {
+  width: 14px;
+  height: 14px;
+  background: #d9dee5;
+  border-radius: 3px;
+}
+
 /* Sentiment controls styles */
 .sentiment-controls {
   display: flex;

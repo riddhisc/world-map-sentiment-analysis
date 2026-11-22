@@ -1,12 +1,12 @@
 # Sentiment Analysis World Map
 
-An interactive React 19 + Vite map that visualizes country-level sentiment with a colorblind-safe diverging net-sentiment scale. Countries with no survey row remain visible in gray and are labeled “No data”.
+An interactive React 19 + Vite map that visualizes country-level sentiment with a colour-vision-safe blue-to-orange diverging net-sentiment scale. Countries with no survey row remain visible in gray and are labeled “No data”.
 
 Live site: <https://riddhisc.github.io/world-map-sentiment-analysis/>
 
 ## Data
 
-The repository currently ships a 27-country demonstration dataset at [`public/data/sentiment.json`](public/data/sentiment.json). Each row contains `country` (ISO-3), `positive`, `neutral`, `negative`, `sampleSize`, `updatedAt`, and `source`. No external ingestion pipeline is included; choose the real data source before adding one.
+The repository currently ships a 27-country illustrative synthetic dataset at [`public/data/sentiment.json`](public/data/sentiment.json); it is not a real survey. Each row contains `country` (ISO-3), `positive`, `neutral`, `negative`, `sampleSize`, `updatedAt`, and `source`. No external ingestion pipeline is included; choose the real data source before adding one.
 
 ## Run locally
 

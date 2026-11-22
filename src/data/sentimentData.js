@@ -1,10 +1,14 @@
 import { countriesByIso3 } from './countries'
 
-export const enrichSentimentData = (rows) => rows.map((row) => ({
-  ...countriesByIso3[row.country],
-  ...row,
-  iso3: row.country,
-}))
+export const enrichSentimentData = (rows) => rows.map((row) => {
+  const country = countriesByIso3[row.country]
+  if (!country) console.warn('[sentiment] data row "' + row.country + '" matches no world-atlas feature')
+  return {
+    ...country,
+    ...row,
+    iso3: row.country,
+  }
+})
 
 export const getOverallSentiment = (data) => data.positive - data.negative
 
@@ -15,11 +19,7 @@ export const getDominantSentiment = (data) => {
 
 export const getSentimentColor = (type, value, data) => {
   if (type === 'overall' && data) {
-    const score = getOverallSentiment(data)
-    const intensity = Math.min(1, Math.abs(score) / 100)
-    if (score > 0) return `rgba(20, ${Math.round(100 + intensity * 100)}, 110, 0.85)`
-    if (score < 0) return `rgba(${Math.round(150 + intensity * 80)}, 70, 85, 0.85)`
-    return 'rgba(230, 180, 60, 0.85)'
+    return getOverallColor(getOverallSentiment(data))
   }
   const intensity = Math.min(1, Math.max(0, value / 100))
   if (type === 'positive') return `rgba(20, ${Math.round(110 + intensity * 100)}, 110, 0.85)`
@@ -28,8 +28,19 @@ export const getSentimentColor = (type, value, data) => {
   return '#d9dee5'
 }
 
-export const getOverallColor = (score) => getSentimentColor('overall', 0, {
-  positive: Math.max(0, score),
-  neutral: 0,
-  negative: Math.max(0, -score),
-})
+const mixRgb = (from, to, amount) => from.map((channel, index) => Math.round(channel + (to[index] - channel) * amount))
+const rgbToHex = (rgb) => `#${rgb.map((channel) => channel.toString(16).padStart(2, '0')).join('')}`
+
+export const getOverallColor = (score) => {
+  const neutral = [245, 245, 245]
+  const orange = [213, 94, 0]
+  const blue = [0, 114, 178]
+  const amount = Math.min(1, Math.abs(score) / 100)
+  return rgbToHex(score < 0 ? mixRgb(neutral, orange, amount) : mixRgb(neutral, blue, amount))
+}
+
+export const getLegendValues = (type) => type === 'overall' ? [-100, -50, 0, 50, 100] : [0, 25, 50, 75, 100]
+
+export const getLegendColors = (type) => getLegendValues(type).map((value) => (
+  type === 'overall' ? getOverallColor(value) : getSentimentColor(type, value)
+))

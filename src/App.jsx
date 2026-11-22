@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
+import { useCallback, useEffect, useMemo, useState } from 'react'
 import { feature } from 'topojson-client'
 import worldAtlas from 'world-atlas/countries-110m.json'
 import './App.css'
@@ -28,7 +28,6 @@ function App() {
   const [sentimentData, setSentimentData] = useState([])
   const [dataState, setDataState] = useState('loading')
   const [dataError, setDataError] = useState(null)
-  const leaveTimeout = useRef(null)
 
   useEffect(() => {
     let cancelled = false
@@ -69,7 +68,6 @@ function App() {
   const handleHover = useCallback((geo, event) => {
     const country = getCountryByNumericId(geo.id)
     const data = sentimentData.find((item) => item.iso3 === country?.iso3)
-    if (leaveTimeout.current) clearTimeout(leaveTimeout.current)
     setHoveredCountry(geo)
     setTooltipData(data || { name: country?.name || 'Unknown country', noData: true })
     setHoveredRegion(data ? country.region : null)
@@ -80,7 +78,7 @@ function App() {
   const handleLeave = useCallback(() => {
     setHoveredCountry(null)
     setTooltipData(null)
-    leaveTimeout.current = setTimeout(() => setHoveredRegion(null), 300)
+    setHoveredRegion(null)
   }, [])
 
   const handleReset = useCallback(() => {
@@ -97,6 +95,15 @@ function App() {
     const data = sentimentData.find((item) => item.iso3 === country?.iso3)
     if (data) setSelectedCountry({ geo, data })
   }, [sentimentData])
+
+  const closeDetailedPanel = useCallback(() => setSelectedCountry(null), [])
+
+  const summaryRegion = hoveredRegion || (selectedRegion === 'all' ? 'World overview' : selectedRegion)
+  const summaryData = hoveredRegion
+    ? hoveredRegionData
+    : selectedRegion === 'all'
+      ? sentimentData
+      : sentimentData.filter((country) => country.region === selectedRegion)
 
   return (
     <ErrorBoundary>
@@ -123,21 +130,21 @@ function App() {
             {hoveredCountry && tooltipData && <CountryTooltip country={hoveredCountry} sentimentData={tooltipData} position={tooltipPosition} />}
             <Legend sentimentType={activeSentiment} />
           </div>
-          {!hoveredCountry && hoveredRegion && hoveredRegionData.length > 0 && (
+          {dataState === 'ready' && summaryData.length > 0 && (
             <aside className="region-summary-dock">
-              <RegionSummary region={hoveredRegion} sentimentData={hoveredRegionData} />
+              <RegionSummary region={summaryRegion} sentimentData={summaryData} />
             </aside>
           )}
         </div>
         {dataState === 'ready' && sentimentData[0] && (
           <p className="methodology-note">
-            Methodology: bundled demonstration survey data. Source: {sentimentData[0].source}. Last updated: {sentimentData[0].updatedAt}.
+            Methodology: illustrative synthetic data for UI demonstration, not a real survey. Source: {sentimentData[0].source}. Last generated: {sentimentData[0].updatedAt}.
           </p>
         )}
         <section className="how-to-use-section">
           <h2>HOW TO USE</h2>
           <div className="instructions">
-            <p><strong>Navigation:</strong> Drag to pan, use mouse wheel to zoom in/out.</p>
+            <p><strong>Navigation:</strong> Drag to pan. Hold Ctrl/Cmd while using the wheel to zoom; a normal wheel scrolls the page.</p>
             <p><strong>View Data:</strong> Hover or tap countries to see sentiment data; select one for details.</p>
             <p><strong>Filter by Region:</strong> Select a region to focus on geographic areas.</p>
           </div>
@@ -146,7 +153,7 @@ function App() {
           <DetailedSentimentPanel
             country={selectedCountry.geo}
             sentimentData={selectedCountry.data}
-            onClose={() => setSelectedCountry(null)}
+            onClose={closeDetailedPanel}
           />
         )}
       </main>

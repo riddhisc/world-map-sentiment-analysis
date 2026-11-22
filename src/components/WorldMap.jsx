@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from 'react'
+import { useEffect, useMemo, useRef, useState } from 'react'
 import { geoEqualEarth, geoPath } from 'd3-geo'
 import { zoom, zoomIdentity } from 'd3-zoom'
 import { select } from 'd3-selection'
@@ -14,6 +14,8 @@ const initialTransform = (width, height) => ({
 function WorldMap({ features, getCountryInfo, onHover, onLeave, onClick, resetKey }) {
   const svgRef = useRef(null)
   const zoomRef = useRef(null)
+  const transformRef = useRef(initialTransform(900, 450))
+  const sizeRef = useRef({ width: 900, height: 450 })
   const [size, setSize] = useState({ width: 900, height: 450 })
   const [transform, setTransform] = useState(() => initialTransform(900, 450))
 
@@ -29,6 +31,10 @@ function WorldMap({ features, getCountryInfo, onHover, onLeave, onClick, resetKe
   }, [])
 
   useEffect(() => {
+    sizeRef.current = size
+  }, [size])
+
+  useEffect(() => {
     const element = svgRef.current
     if (!element) return undefined
     const selection = select(element)
@@ -38,41 +44,51 @@ function WorldMap({ features, getCountryInfo, onHover, onLeave, onClick, resetKe
       .extent([[0, 0], [size.width, size.height]])
       .on('zoom', (event) => {
         const next = event.transform
+        transformRef.current = { x: next.x, y: next.y, k: next.k }
         setTransform({ x: next.x, y: next.y, k: next.k })
       })
+      .filter((event) => event.type !== 'wheel' || event.ctrlKey || event.metaKey)
     zoomRef.current = behavior
     selection.call(behavior).call(behavior.transform, zoomIdentity
-      .translate(size.width * (1 - INITIAL_ZOOM) / 2, size.height * (1 - INITIAL_ZOOM) / 2)
-      .scale(INITIAL_ZOOM))
+      .translate(transformRef.current.x, transformRef.current.y)
+      .scale(transformRef.current.k))
     return () => selection.on('.zoom', null)
   }, [size])
 
   useEffect(() => {
     if (!zoomRef.current || !svgRef.current) return
+    const { width, height } = sizeRef.current
     const next = zoomIdentity
-      .translate(size.width * (1 - INITIAL_ZOOM) / 2, size.height * (1 - INITIAL_ZOOM) / 2)
+      .translate(width * (1 - INITIAL_ZOOM) / 2, height * (1 - INITIAL_ZOOM) / 2)
       .scale(INITIAL_ZOOM)
+    transformRef.current = { x: next.x, y: next.y, k: next.k }
     select(svgRef.current).call(zoomRef.current.transform, next)
-  }, [resetKey, size])
+  }, [resetKey])
 
-  const projection = geoEqualEarth().fitSize([size.width, size.height], {
+  const projection = useMemo(() => geoEqualEarth().fitSize([size.width, size.height], {
     type: 'FeatureCollection',
     features,
-  })
-  const path = geoPath(projection)
+  }), [features, size])
+  const path = useMemo(() => geoPath(projection), [projection])
+  const renderedFeatures = useMemo(() => features.map((geo, index) => ({
+    geo,
+    path: path(geo) || undefined,
+    key: geo.id || `${geo.properties?.name || 'country'}-${index}`,
+  })), [features, path])
 
   return (
-    <svg ref={svgRef} viewBox={`0 0 ${size.width} ${size.height}`} role="img" aria-label="Interactive sentiment world map">
+    <svg ref={svgRef} viewBox={`0 0 ${size.width} ${size.height}`} role="group" aria-labelledby="world-map-title">
+      <title id="world-map-title">Interactive sentiment world map</title>
       <rect width={size.width} height={size.height} fill="#e6f2ff" />
       <g transform={`translate(${transform.x} ${transform.y}) scale(${transform.k})`}>
-        {features.map((geo) => {
+        {renderedFeatures.map(({ geo, path: countryPath, key }) => {
           const info = getCountryInfo(geo)
           const country = info?.country
           const name = country?.name || geo.properties?.name || 'Unknown country'
           return (
             <path
-              key={geo.id}
-              d={path(geo) || undefined}
+              key={key}
+              d={countryPath}
               fill={info?.fill || '#d9dee5'}
               stroke={info?.isInSelectedRegion ? '#ffffff' : '#aeb8c4'}
               strokeWidth={0.5 / transform.k}
@@ -82,6 +98,8 @@ function WorldMap({ features, getCountryInfo, onHover, onLeave, onClick, resetKe
               onMouseEnter={(event) => onHover?.(geo, event)}
               onMouseMove={(event) => onHover?.(geo, event)}
               onMouseLeave={onLeave}
+              onFocus={(event) => onHover?.(geo, event)}
+              onBlur={onLeave}
               onClick={() => info?.interactive && onClick?.(geo)}
               onKeyDown={(event) => {
                 if (info?.interactive && (event.key === 'Enter' || event.key === ' ')) {

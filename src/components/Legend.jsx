@@ -1,154 +1,31 @@
-import React from 'react';
-import { getOverallColor } from '../data/sentimentData';
+import { getLegendColors, getLegendValues } from '../data/sentimentData'
 
-const Legend = ({ sentimentType }) => {
-  const legendStyles = {
-    container: {
-      position: 'absolute',
-      bottom: '20px',
-      right: '20px',
-      backgroundColor: 'rgba(255, 255, 255, 0.95)',
-      padding: '15px',
-      borderRadius: '8px',
-      boxShadow: '0 4px 15px rgba(0, 0, 0, 0.15)',
-      zIndex: 1000,
-      display: 'flex',
-      flexDirection: 'column',
-      gap: '8px',
-      fontSize: '13px',
-      maxWidth: '220px',
-      backdropFilter: 'blur(5px)',
-      border: '1px solid rgba(236, 240, 241, 0.8)',
-    },
-    title: {
-      fontWeight: '600',
-      marginBottom: '8px',
-      textAlign: 'center',
-      fontSize: '14px',
-      color: '#2c3e50',
-      borderBottom: '2px solid #3498db',
-      paddingBottom: '6px',
-      textTransform: 'uppercase',
-      letterSpacing: '0.5px',
-    },
-    row: {
-      display: 'flex',
-      alignItems: 'center',
-      gap: '10px',
-      padding: '4px 0',
-    },
-    colorBox: {
-      width: '18px',
-      height: '18px',
-      borderRadius: '4px',
-      boxShadow: '0 1px 3px rgba(0, 0, 0, 0.2)',
-    },
-    label: {
-      flexGrow: 1,
-      fontWeight: '500',
-      color: '#34495e',
-    },
-    footer: {
-      fontSize: '11px',
-      marginTop: '8px',
-      color: '#7f8c8d',
-      fontStyle: 'italic',
-      borderTop: '1px solid #ecf0f1',
-      paddingTop: '6px',
-    }
-  };
+const labels = {
+  overall: 'Overall net sentiment',
+  positive: 'Positive sentiment',
+  neutral: 'Neutral sentiment',
+  negative: 'Negative sentiment',
+}
 
-  const renderLegendItems = () => {
-    switch (sentimentType) {
-      case 'positive':
-        return (
-          <>
-            <div style={legendStyles.title}>Positive Sentiment</div>
-            <div style={legendStyles.row}>
-              <div style={{ ...legendStyles.colorBox, backgroundColor: 'rgba(0, 200, 0, 0.7)' }}></div>
-              <div style={legendStyles.label}>Low (0-33%)</div>
-            </div>
-            <div style={legendStyles.row}>
-              <div style={{ ...legendStyles.colorBox, backgroundColor: 'rgba(0, 225, 0, 0.7)' }}></div>
-              <div style={legendStyles.label}>Medium (34-66%)</div>
-            </div>
-            <div style={legendStyles.row}>
-              <div style={{ ...legendStyles.colorBox, backgroundColor: 'rgba(0, 255, 0, 0.7)' }}></div>
-              <div style={legendStyles.label}>High (67-100%)</div>
-            </div>
-          </>
-        );
-      case 'neutral':
-        return (
-          <>
-            <div style={legendStyles.title}>Neutral Sentiment</div>
-            <div style={legendStyles.row}>
-              <div style={{ ...legendStyles.colorBox, backgroundColor: 'rgba(200, 200, 0, 0.7)' }}></div>
-              <div style={legendStyles.label}>Low (0-33%)</div>
-            </div>
-            <div style={legendStyles.row}>
-              <div style={{ ...legendStyles.colorBox, backgroundColor: 'rgba(225, 225, 0, 0.7)' }}></div>
-              <div style={legendStyles.label}>Medium (34-66%)</div>
-            </div>
-            <div style={legendStyles.row}>
-              <div style={{ ...legendStyles.colorBox, backgroundColor: 'rgba(255, 255, 0, 0.7)' }}></div>
-              <div style={legendStyles.label}>High (67-100%)</div>
-            </div>
-          </>
-        );
-      case 'negative':
-        return (
-          <>
-            <div style={legendStyles.title}>Negative Sentiment</div>
-            <div style={legendStyles.row}>
-              <div style={{ ...legendStyles.colorBox, backgroundColor: 'rgba(200, 0, 0, 0.7)' }}></div>
-              <div style={legendStyles.label}>Low (0-33%)</div>
-            </div>
-            <div style={legendStyles.row}>
-              <div style={{ ...legendStyles.colorBox, backgroundColor: 'rgba(225, 0, 0, 0.7)' }}></div>
-              <div style={legendStyles.label}>Medium (34-66%)</div>
-            </div>
-            <div style={legendStyles.row}>
-              <div style={{ ...legendStyles.colorBox, backgroundColor: 'rgba(255, 0, 0, 0.7)' }}></div>
-              <div style={legendStyles.label}>High (67-100%)</div>
-            </div>
-          </>
-        );
-      case 'overall':
-        return (
-          <>
-            <div style={legendStyles.title}>Overall Sentiment</div>
-            <div style={legendStyles.row}>
-              <div style={{ ...legendStyles.colorBox, backgroundColor: getOverallColor(-100) }}></div>
-              <div style={legendStyles.label}>-100 negative</div>
-            </div>
-            <div style={legendStyles.row}>
-              <div style={{ ...legendStyles.colorBox, backgroundColor: getOverallColor(0) }}></div>
-              <div style={legendStyles.label}>0 neutral</div>
-            </div>
-            <div style={legendStyles.row}>
-              <div style={{ ...legendStyles.colorBox, backgroundColor: getOverallColor(100) }}></div>
-              <div style={legendStyles.label}>+100 positive</div>
-            </div>
-            <div style={legendStyles.footer}>
-              Countries use net sentiment: positive minus negative
-            </div>
-          </>
-        );
-      default:
-        return null;
-    }
-  };
+const getLegendGradient = (sentimentType) => {
+  const colors = getLegendColors(sentimentType)
+  return `linear-gradient(to right, ${colors.map((color, index) => `${color} ${(index / (colors.length - 1)) * 100}%`).join(', ')})`
+}
+
+function Legend({ sentimentType }) {
+  const values = getLegendValues(sentimentType)
+  const isOverall = sentimentType === 'overall'
+  const minLabel = isOverall ? `${values[0]} negative` : `${values[0]}%`
+  const maxLabel = isOverall ? `+${values.at(-1)} positive` : `${values.at(-1)}%`
 
   return (
-    <div style={legendStyles.container}>
-      {renderLegendItems()}
-      <div style={legendStyles.row}>
-        <div style={{ ...legendStyles.colorBox, backgroundColor: '#d9dee5' }} />
-        <div style={legendStyles.label}>No data</div>
-      </div>
+    <div className="legend" aria-label={`${labels[sentimentType]} legend`}>
+      <div className="legend-title">{labels[sentimentType]}</div>
+      <div className="legend-gradient" style={{ background: getLegendGradient(sentimentType) }} />
+      <div className="legend-scale"><span>{minLabel}</span><span>0</span><span>{maxLabel}</span></div>
+      <div className="legend-row"><span className="legend-no-data" />No data</div>
     </div>
-  );
-};
+  )
+}
 
-export default Legend;
+export default Legend
