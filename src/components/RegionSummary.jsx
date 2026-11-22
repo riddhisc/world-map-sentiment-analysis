@@ -131,12 +131,12 @@ const RegionSummary = ({ region, sentimentData }) => {
       
       <div style={styles.statRow}>
         <span style={styles.label}>Most Positive:</span>
-        <span style={styles.value}>{mostPositive.country} ({mostPositive.positive}%)</span>
+        <span style={styles.value}>{mostPositive.name} ({mostPositive.positive}%)</span>
       </div>
       
       <div style={styles.statRow}>
         <span style={styles.label}>Most Negative:</span>
-        <span style={styles.value}>{mostNegative.country} ({mostNegative.negative}%)</span>
+        <span style={styles.value}>{mostNegative.name} ({mostNegative.negative}%)</span>
       </div>
       
       <div style={styles.footer}>

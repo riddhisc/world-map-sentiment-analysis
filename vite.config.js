@@ -4,7 +4,7 @@ import react from '@vitejs/plugin-react'
 // https://vite.dev/config/
 export default defineConfig({
   plugins: [react()],
-  base: '/world-map-sentiment-analysis/',
+  base: process.env.VITE_BASE || '/',
   build: {
     outDir: 'build',
     assetsDir: 'assets',
@@ -14,12 +14,4 @@ export default defineConfig({
       }
     }
   },
-  resolve: {
-    alias: {
-      crypto: 'crypto-js'
-    }
-  },
-  define: {
-    'process.env': {}
-  }
 })

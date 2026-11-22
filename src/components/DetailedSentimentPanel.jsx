@@ -3,32 +3,7 @@ import React from 'react';
 const DetailedSentimentPanel = ({ country, sentimentData, onClose }) => {
   if (!country || !sentimentData) return null;
   
-  // Map of country IDs to country names since world-atlas doesn't include names
-  const countryNames = {
-    840: 'United States',
-    124: 'Canada',
-    826: 'United Kingdom',
-    250: 'France',
-    276: 'Germany',
-    392: 'Japan',
-    156: 'China',
-    356: 'India',
-    76: 'Brazil',
-    710: 'South Africa',
-    36: 'Australia',
-    643: 'Russia',
-    484: 'Mexico',
-    380: 'Italy',
-    724: 'Spain',
-    410: 'South Korea',
-    682: 'Saudi Arabia',
-    818: 'Egypt',
-    566: 'Nigeria',
-    32: 'Argentina'
-  };
-  
-  // Get the country name from the ID
-  const countryName = countryNames[country.id] || 'Unknown';
+  const countryName = sentimentData.name || 'Unknown';
 
   const styles = {
     overlay: {

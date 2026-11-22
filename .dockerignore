@@ -7,4 +7,3 @@ Dockerfile
 .github
 .gitignore
 README.md
-docker-compose.yml

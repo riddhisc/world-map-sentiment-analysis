@@ -1,5 +1,5 @@
 # Build stage
-FROM node:16-alpine as build
+FROM node:24-alpine as build
 
 # Set working directory
 WORKDIR /app
@@ -8,13 +8,13 @@ WORKDIR /app
 COPY package*.json ./
 
 # Install dependencies
-RUN npm install
+RUN npm ci
 
 # Copy all files
 COPY . .
 
 # Build the app
-RUN npm run build
+RUN VITE_BASE=/ npm run build
 
 # Production stage
 FROM nginx:alpine
