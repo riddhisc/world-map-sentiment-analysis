@@ -2,7 +2,6 @@ import { useCallback, useEffect, useMemo, useState } from 'react'
 import { feature } from 'topojson-client'
 import worldAtlas from 'world-atlas/countries-110m.json'
 import './App.css'
-import ErrorBoundary from './components/ErrorBoundary'
 import CountryTooltip from './components/CountryTooltip'
 import DetailedSentimentPanel from './components/DetailedSentimentPanel'
 import ErrorMessage from './components/ErrorMessage'
@@ -28,6 +27,7 @@ function App() {
   const [sentimentData, setSentimentData] = useState([])
   const [dataState, setDataState] = useState('loading')
   const [dataError, setDataError] = useState(null)
+  const [showZoomHint, setShowZoomHint] = useState(true)
 
   useEffect(() => {
     let cancelled = false
@@ -97,6 +97,7 @@ function App() {
   }, [sentimentData])
 
   const closeDetailedPanel = useCallback(() => setSelectedCountry(null), [])
+  const handleZoomInteraction = useCallback(() => setShowZoomHint(false), [])
 
   const summaryRegion = hoveredRegion || (selectedRegion === 'all' ? 'World overview' : selectedRegion)
   const summaryData = hoveredRegion
@@ -106,18 +107,22 @@ function App() {
       : sentimentData.filter((country) => country.region === selectedRegion)
 
   return (
-    <ErrorBoundary>
       <main className="map-container">
-        <h1>Sentiment Analysis World Map</h1>
+        <header className="app-header">
+          <div><p className="eyebrow">Global pulse</p><h1>Sentiment Analysis <span>World Map</span></h1><p className="subtitle">Explore illustrative public sentiment by country and region.</p></div>
+          <div className="header-badge">{sentimentData.length || '—'} countries tracked</div>
+        </header>
         {dataState === 'loading' && <p className="data-status">Loading sentiment data…</p>}
         {dataState === 'error' && <ErrorMessage message={`Unable to load sentiment data: ${dataError}`} onRetry={() => window.location.reload()} />}
         {dataState === 'ready' && sentimentData.length === 0 && <p className="data-status">No sentiment data is available.</p>}
+        {dataState === 'ready' && <RegionSummary region="World overview" sentimentData={sentimentData} variant="strip" />}
         <div className="control-panel" aria-busy={dataState === 'loading'}>
           <SentimentControls activeSentiment={activeSentiment} onSentimentChange={setActiveSentiment} />
           <RegionSelector regions={regions} selectedRegion={selectedRegion} onRegionChange={setSelectedRegion} />
           <button className="reset-button" type="button" onClick={handleReset}>Reset Map</button>
+          {showZoomHint && <span className="zoom-hint">Ctrl/Cmd + scroll to zoom</span>}
         </div>
-        <div className="map-layout">
+        <div className="map-shell">
           <div className="map">
             <WorldMap
               features={worldData.features}
@@ -126,15 +131,12 @@ function App() {
               onLeave={handleLeave}
               onClick={handleClick}
               resetKey={resetKey}
+              onZoomInteraction={handleZoomInteraction}
             />
             {hoveredCountry && tooltipData && <CountryTooltip country={hoveredCountry} sentimentData={tooltipData} position={tooltipPosition} />}
             <Legend sentimentType={activeSentiment} />
           </div>
-          {dataState === 'ready' && summaryData.length > 0 && (
-            <aside className="region-summary-dock">
-              <RegionSummary region={summaryRegion} sentimentData={summaryData} />
-            </aside>
-          )}
+          {dataState === 'ready' && (hoveredRegion || selectedRegion !== 'all') && summaryData.length > 0 && <RegionSummary region={summaryRegion} sentimentData={summaryData} variant="drawer" />}
         </div>
         {dataState === 'ready' && sentimentData[0] && (
           <p className="methodology-note">
@@ -157,7 +159,6 @@ function App() {
           />
         )}
       </main>
-    </ErrorBoundary>
   )
 }
 

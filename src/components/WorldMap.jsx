@@ -11,7 +11,7 @@ const initialTransform = (width, height) => ({
   k: INITIAL_ZOOM,
 })
 
-function WorldMap({ features, getCountryInfo, onHover, onLeave, onClick, resetKey }) {
+function WorldMap({ features, getCountryInfo, onHover, onLeave, onClick, resetKey, onZoomInteraction }) {
   const svgRef = useRef(null)
   const zoomRef = useRef(null)
   const transformRef = useRef(initialTransform(900, 450))
@@ -43,6 +43,7 @@ function WorldMap({ features, getCountryInfo, onHover, onLeave, onClick, resetKe
       .translateExtent([[0, 0], [size.width, size.height]])
       .extent([[0, 0], [size.width, size.height]])
       .on('zoom', (event) => {
+        if (event.sourceEvent?.type === 'wheel') onZoomInteraction?.()
         const next = event.transform
         transformRef.current = { x: next.x, y: next.y, k: next.k }
         setTransform({ x: next.x, y: next.y, k: next.k })
@@ -53,7 +54,7 @@ function WorldMap({ features, getCountryInfo, onHover, onLeave, onClick, resetKe
       .translate(transformRef.current.x, transformRef.current.y)
       .scale(transformRef.current.k))
     return () => selection.on('.zoom', null)
-  }, [size])
+  }, [onZoomInteraction, size])
 
   useEffect(() => {
     if (!zoomRef.current || !svgRef.current) return
@@ -79,7 +80,8 @@ function WorldMap({ features, getCountryInfo, onHover, onLeave, onClick, resetKe
   return (
     <svg ref={svgRef} viewBox={`0 0 ${size.width} ${size.height}`} role="group" aria-labelledby="world-map-title">
       <title id="world-map-title">Interactive sentiment world map</title>
-      <rect width={size.width} height={size.height} fill="#e6f2ff" />
+      <defs><pattern id="no-data-hatch" width="6" height="6" patternUnits="userSpaceOnUse" patternTransform="rotate(35)"><path d="M0 0V6" stroke="#fff" strokeOpacity=".28" strokeWidth="2" /></pattern></defs>
+      <rect width={size.width} height={size.height} className="map-ocean" />
       <g transform={`translate(${transform.x} ${transform.y}) scale(${transform.k})`}>
         {renderedFeatures.map(({ geo, path: countryPath, key }) => {
           const info = getCountryInfo(geo)
@@ -89,7 +91,8 @@ function WorldMap({ features, getCountryInfo, onHover, onLeave, onClick, resetKe
             <path
               key={key}
               d={countryPath}
-              fill={info?.fill || '#d9dee5'}
+              fill={info?.interactive ? info.fill : `url(#no-data-hatch)`}
+              className={info?.interactive ? 'country-shape' : 'country-shape country-shape--no-data'}
               stroke={info?.isInSelectedRegion ? '#ffffff' : '#aeb8c4'}
               strokeWidth={0.5 / transform.k}
               tabIndex={info?.interactive ? 0 : -1}
