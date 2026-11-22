@@ -5,6 +5,15 @@ const CountryTooltip = ({ country, sentimentData }) => {
   
   const countryName = sentimentData.name || sentimentData.displayName || 'Unknown';
 
+  if (sentimentData.noData) {
+    return (
+      <div className="country-tooltip" role="status">
+        <strong>{countryName}</strong>
+        <p>No sentiment data available for this country.</p>
+      </div>
+    );
+  }
+
   const tooltipStyles = {
     container: {
       position: 'absolute',

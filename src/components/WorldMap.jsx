@@ -79,8 +79,8 @@ function WorldMap({ features, getCountryInfo, onHover, onLeave, onClick, resetKe
               tabIndex={info?.interactive ? 0 : -1}
               role={info?.interactive ? 'button' : undefined}
               aria-label={info?.interactive ? `${name}, sentiment data available` : `${name}, no data`}
-              onMouseEnter={(event) => info?.interactive && onHover?.(geo, event)}
-              onMouseMove={(event) => info?.interactive && onHover?.(geo, event)}
+              onMouseEnter={(event) => onHover?.(geo, event)}
+              onMouseMove={(event) => onHover?.(geo, event)}
               onMouseLeave={onLeave}
               onClick={() => info?.interactive && onClick?.(geo)}
               onKeyDown={(event) => {

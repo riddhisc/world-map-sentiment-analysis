@@ -1,22 +1,10 @@
 import { countriesByIso3 } from './countries'
 
-export const sentimentData = [
-  ['USA', 65, 25, 10], ['CAN', 70, 20, 10], ['GBR', 55, 30, 15],
-  ['FRA', 50, 35, 15], ['DEU', 60, 25, 15], ['JPN', 75, 15, 10],
-  ['CHN', 45, 30, 25], ['IND', 60, 25, 15], ['BRA', 70, 20, 10],
-  ['ZAF', 55, 30, 15], ['AUS', 75, 15, 10], ['RUS', 40, 35, 25],
-  ['MEX', 65, 25, 10], ['ITA', 60, 25, 15], ['ESP', 65, 20, 15],
-  ['KOR', 70, 20, 10], ['SAU', 50, 30, 20], ['EGY', 45, 35, 20],
-  ['NGA', 60, 25, 15], ['ARG', 65, 25, 10],
-].map(([iso3, positive, neutral, negative]) => ({
-  ...countriesByIso3[iso3], positive, neutral, negative,
-  sampleSize: 1000, updatedAt: '2026-11-22',
-  source: 'Demo dataset bundled with the application',
+export const enrichSentimentData = (rows) => rows.map((row) => ({
+  ...countriesByIso3[row.country],
+  ...row,
+  iso3: row.country,
 }))
-
-export const sentimentByIso3 = Object.fromEntries(
-  sentimentData.map((country) => [country.iso3, country]),
-)
 
 export const getOverallSentiment = (data) => data.positive - data.negative
 

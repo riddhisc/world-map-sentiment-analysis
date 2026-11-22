@@ -139,7 +139,15 @@ const Legend = ({ sentimentType }) => {
     }
   };
 
-  return <div style={legendStyles.container}>{renderLegendItems()}</div>;
+  return (
+    <div style={legendStyles.container}>
+      {renderLegendItems()}
+      <div style={legendStyles.row}>
+        <div style={{ ...legendStyles.colorBox, backgroundColor: '#d9dee5' }} />
+        <div style={legendStyles.label}>No data</div>
+      </div>
+    </div>
+  );
 };
 
 export default Legend;

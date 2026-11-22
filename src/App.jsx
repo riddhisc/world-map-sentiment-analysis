@@ -1,17 +1,18 @@
-import { useCallback, useMemo, useRef, useState } from 'react'
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { feature } from 'topojson-client'
 import worldAtlas from 'world-atlas/countries-110m.json'
 import './App.css'
 import ErrorBoundary from './components/ErrorBoundary'
 import CountryTooltip from './components/CountryTooltip'
 import DetailedSentimentPanel from './components/DetailedSentimentPanel'
+import ErrorMessage from './components/ErrorMessage'
 import Legend from './components/Legend'
 import RegionSelector from './components/RegionSelector'
 import RegionSummary from './components/RegionSummary'
 import SentimentControls from './components/SentimentControls'
 import WorldMap from './components/WorldMap'
 import { getCountryByNumericId } from './data/countries'
-import { getSentimentColor, sentimentByIso3, sentimentData } from './data/sentimentData'
+import { enrichSentimentData, getSentimentColor } from './data/sentimentData'
 
 const worldData = feature(worldAtlas, worldAtlas.objects.countries)
 
@@ -23,33 +24,55 @@ function App() {
   const [hoveredRegion, setHoveredRegion] = useState(null)
   const [selectedCountry, setSelectedCountry] = useState(null)
   const [resetKey, setResetKey] = useState(0)
+  const [sentimentData, setSentimentData] = useState([])
+  const [dataState, setDataState] = useState('loading')
+  const [dataError, setDataError] = useState(null)
   const leaveTimeout = useRef(null)
 
-  const regions = useMemo(() => [...new Set(sentimentData.map((country) => country.region))].sort(), [])
+  useEffect(() => {
+    let cancelled = false
+    fetch(`${import.meta.env.BASE_URL}data/sentiment.json`)
+      .then((response) => {
+        if (!response.ok) throw new Error(`Data request failed with ${response.status}`)
+        return response.json()
+      })
+      .then((rows) => {
+        if (cancelled) return
+        setSentimentData(enrichSentimentData(rows))
+        setDataState('ready')
+      })
+      .catch((loadError) => {
+        if (cancelled) return
+        setDataError(loadError.message)
+        setDataState('error')
+      })
+    return () => { cancelled = true }
+  }, [])
+
+  const regions = useMemo(() => [...new Set(sentimentData.map((country) => country.region))].sort(), [sentimentData])
   const hoveredRegionData = useMemo(
     () => sentimentData.filter((country) => country.region === hoveredRegion),
-    [hoveredRegion],
+    [hoveredRegion, sentimentData],
   )
 
   const getCountryInfo = useCallback((geo) => {
     const country = getCountryByNumericId(geo.id)
-    const data = country ? sentimentByIso3[country.iso3] : null
+    const data = sentimentData.find((item) => item.iso3 === country?.iso3)
     const isInSelectedRegion = selectedRegion === 'all' || country?.region === selectedRegion
     const fill = !isInSelectedRegion
       ? '#eef0f2'
       : data ? getSentimentColor(activeSentiment, data[activeSentiment], data) : '#d9dee5'
     return { country, data, fill, isInSelectedRegion, interactive: Boolean(data) }
-  }, [activeSentiment, selectedRegion])
+  }, [activeSentiment, selectedRegion, sentimentData])
 
   const handleHover = useCallback((geo) => {
     const country = getCountryByNumericId(geo.id)
-    const data = country ? sentimentByIso3[country.iso3] : null
-    if (!data) return
+    const data = sentimentData.find((item) => item.iso3 === country?.iso3)
     if (leaveTimeout.current) clearTimeout(leaveTimeout.current)
     setHoveredCountry(geo)
-    setTooltipData(data)
-    setHoveredRegion(country.region)
-  }, [])
+    setTooltipData(data || { name: country?.name || 'Unknown country', noData: true })
+    setHoveredRegion(data ? country.region : null)
+  }, [sentimentData])
 
   const handleLeave = useCallback(() => {
     setHoveredCountry(null)
@@ -68,15 +91,18 @@ function App() {
 
   const handleClick = useCallback((geo) => {
     const country = getCountryByNumericId(geo.id)
-    const data = country ? sentimentByIso3[country.iso3] : null
+    const data = sentimentData.find((item) => item.iso3 === country?.iso3)
     if (data) setSelectedCountry({ geo, data })
-  }, [])
+  }, [sentimentData])
 
   return (
     <ErrorBoundary>
       <main className="map-container">
         <h1>Sentiment Analysis World Map</h1>
-        <div className="control-panel">
+        {dataState === 'loading' && <p className="data-status">Loading sentiment data…</p>}
+        {dataState === 'error' && <ErrorMessage message={`Unable to load sentiment data: ${dataError}`} onRetry={() => window.location.reload()} />}
+        {dataState === 'ready' && sentimentData.length === 0 && <p className="data-status">No sentiment data is available.</p>}
+        <div className="control-panel" aria-busy={dataState === 'loading'}>
           <SentimentControls activeSentiment={activeSentiment} onSentimentChange={setActiveSentiment} />
           <RegionSelector regions={regions} selectedRegion={selectedRegion} onRegionChange={setSelectedRegion} />
           <button className="reset-button" type="button" onClick={handleReset}>Reset Map</button>
@@ -100,6 +126,11 @@ function App() {
             </aside>
           )}
         </div>
+        {dataState === 'ready' && sentimentData[0] && (
+          <p className="methodology-note">
+            Methodology: bundled demonstration survey data. Source: {sentimentData[0].source}. Last updated: {sentimentData[0].updatedAt}.
+          </p>
+        )}
         <section className="how-to-use-section">
           <h2>HOW TO USE</h2>
           <div className="instructions">
