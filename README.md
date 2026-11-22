@@ -1,12 +1,36 @@
-# React + Vite
+# Sentiment Analysis World Map
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+An interactive React 19 + Vite map that visualizes country-level sentiment with a colorblind-safe diverging net-sentiment scale. Countries with no survey row remain visible in gray and are labeled “No data”.
 
-Currently, two official plugins are available:
+Live site: <https://riddhisc.github.io/world-map-sentiment-analysis/>
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Babel](https://babeljs.io/) for Fast Refresh
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/) for Fast Refresh
+## Data
 
-## Expanding the ESLint configuration
+The repository currently ships a 27-country demonstration dataset at [`public/data/sentiment.json`](public/data/sentiment.json). Each row contains `country` (ISO-3), `positive`, `neutral`, `negative`, `sampleSize`, `updatedAt`, and `source`. No external ingestion pipeline is included; choose the real data source before adding one.
 
-If you are developing a production application, we recommend using TypeScript with type-aware lint rules enabled. Check out the [TS template](https://github.com/vitejs/vite/tree/main/packages/create-vite/template-react-ts) for information on how to integrate TypeScript and [`typescript-eslint`](https://typescript-eslint.io) in your project.
+## Run locally
+
+Requires Node.js 24 LTS. Use `npm ci`, then:
+
+```bash
+npm run dev
+```
+
+Open the URL printed by Vite. Local development uses `/` as the base path.
+
+## Verify
+
+```bash
+npm run lint
+npm test
+npm run build
+```
+
+To preview the production build, run `npm run preview`. GitHub Pages builds with `VITE_BASE=/world-map-sentiment-analysis/` through the single workflow in `.github/workflows/deploy.yml`.
+
+## Interactions
+
+- Choose Overall, Positive, Neutral, or Negative sentiment.
+- Filter by region.
+- Drag or pinch/wheel to pan and zoom; Reset Map restores the initial view.
+- Hover or tap a country for its data; click or press Enter/Space for the detail dialog.
