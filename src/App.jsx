@@ -5,7 +5,6 @@ import './App.css'
 import ErrorBoundary from './components/ErrorBoundary'
 import CountryTooltip from './components/CountryTooltip'
 import DetailedSentimentPanel from './components/DetailedSentimentPanel'
-import ErrorMessage from './components/ErrorMessage'
 import Legend from './components/Legend'
 import RegionSelector from './components/RegionSelector'
 import RegionSummary from './components/RegionSummary'
@@ -23,7 +22,6 @@ function App() {
   const [tooltipData, setTooltipData] = useState(null)
   const [hoveredRegion, setHoveredRegion] = useState(null)
   const [selectedCountry, setSelectedCountry] = useState(null)
-  const [error, setError] = useState(null)
   const leaveTimeout = useRef(null)
 
   const regions = useMemo(() => [...new Set(sentimentData.map((country) => country.region))].sort(), [])
@@ -64,7 +62,6 @@ function App() {
     setTooltipData(null)
     setHoveredRegion(null)
     setSelectedCountry(null)
-    setError(null)
   }, [])
 
   const handleClick = useCallback((geo) => {
@@ -77,7 +74,6 @@ function App() {
     <ErrorBoundary>
       <main className="map-container">
         <h1>Sentiment Analysis World Map</h1>
-        {error && <ErrorMessage message={error} onRetry={handleReset} />}
         <div className="control-panel">
           <SentimentControls activeSentiment={activeSentiment} onSentimentChange={setActiveSentiment} />
           <RegionSelector regions={regions} selectedRegion={selectedRegion} onRegionChange={setSelectedRegion} />
