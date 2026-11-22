@@ -21,6 +21,7 @@ function App() {
   const [selectedRegion, setSelectedRegion] = useState('all')
   const [hoveredCountry, setHoveredCountry] = useState(null)
   const [tooltipData, setTooltipData] = useState(null)
+  const [tooltipPosition, setTooltipPosition] = useState({ x: 12, y: 12 })
   const [hoveredRegion, setHoveredRegion] = useState(null)
   const [selectedCountry, setSelectedCountry] = useState(null)
   const [resetKey, setResetKey] = useState(0)
@@ -65,13 +66,15 @@ function App() {
     return { country, data, fill, isInSelectedRegion, interactive: Boolean(data) }
   }, [activeSentiment, selectedRegion, sentimentData])
 
-  const handleHover = useCallback((geo) => {
+  const handleHover = useCallback((geo, event) => {
     const country = getCountryByNumericId(geo.id)
     const data = sentimentData.find((item) => item.iso3 === country?.iso3)
     if (leaveTimeout.current) clearTimeout(leaveTimeout.current)
     setHoveredCountry(geo)
     setTooltipData(data || { name: country?.name || 'Unknown country', noData: true })
     setHoveredRegion(data ? country.region : null)
+    const mapBounds = event?.currentTarget?.closest('.map')?.getBoundingClientRect()
+    if (mapBounds && event) setTooltipPosition({ x: event.clientX - mapBounds.left + 12, y: event.clientY - mapBounds.top + 12 })
   }, [sentimentData])
 
   const handleLeave = useCallback(() => {
@@ -117,7 +120,7 @@ function App() {
               onClick={handleClick}
               resetKey={resetKey}
             />
-            {hoveredCountry && tooltipData && <CountryTooltip country={hoveredCountry} sentimentData={tooltipData} />}
+            {hoveredCountry && tooltipData && <CountryTooltip country={hoveredCountry} sentimentData={tooltipData} position={tooltipPosition} />}
             <Legend sentimentType={activeSentiment} />
           </div>
           {!hoveredCountry && hoveredRegion && hoveredRegionData.length > 0 && (

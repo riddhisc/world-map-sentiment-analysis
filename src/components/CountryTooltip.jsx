@@ -1,13 +1,13 @@
 import React from 'react';
 
-const CountryTooltip = ({ country, sentimentData }) => {
+const CountryTooltip = ({ country, sentimentData, position }) => {
   if (!country || !sentimentData) return null;
   
   const countryName = sentimentData.name || sentimentData.displayName || 'Unknown';
 
   if (sentimentData.noData) {
     return (
-      <div className="country-tooltip" role="status">
+      <div className="country-tooltip" role="status" style={{ left: position?.x ?? 12, top: position?.y ?? 12 }}>
         <strong>{countryName}</strong>
         <p>No sentiment data available for this country.</p>
       </div>
@@ -17,8 +17,8 @@ const CountryTooltip = ({ country, sentimentData }) => {
   const tooltipStyles = {
     container: {
       position: 'absolute',
-      top: '10px',
-      left: '10px',
+      top: `${position?.y ?? 10}px`,
+      left: `${position?.x ?? 10}px`,
       backgroundColor: 'rgba(255, 255, 255, 0.95)',
       padding: '15px',
       borderRadius: '10px',

@@ -1,251 +1,62 @@
-import React from 'react';
+import { useEffect, useRef } from 'react'
 
-const DetailedSentimentPanel = ({ country, sentimentData, onClose }) => {
-  if (!country || !sentimentData) return null;
-  
-  const countryName = sentimentData.name || 'Unknown';
+const focusableSelector = 'button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])'
 
-  const styles = {
-    overlay: {
-      position: 'fixed',
-      top: 0,
-      left: 0,
-      right: 0,
-      bottom: 0,
-      backgroundColor: 'rgba(0, 0, 0, 0.5)',
-      zIndex: 1000,
-      display: 'flex',
-      justifyContent: 'center',
-      alignItems: 'center',
-    },
-    panel: {
-      backgroundColor: 'white',
-      borderRadius: '8px',
-      boxShadow: '0 4px 12px rgba(0, 0, 0, 0.2)',
-      padding: '20px',
-      maxWidth: '500px',
-      width: '90%',
-      maxHeight: '80vh',
-      overflow: 'auto',
-      position: 'relative',
-    },
-    closeButton: {
-      position: 'absolute',
-      top: '10px',
-      right: '10px',
-      background: 'none',
-      border: 'none',
-      fontSize: '20px',
-      cursor: 'pointer',
-      color: '#666',
-    },
-    header: {
-      borderBottom: '1px solid #eee',
-      paddingBottom: '10px',
-      marginBottom: '15px',
-    },
-    title: {
-      fontSize: '20px',
-      fontWeight: 'bold',
-      marginBottom: '5px',
-      color: '#333',
-    },
-    subtitle: {
-      fontSize: '14px',
-      color: '#666',
-      marginBottom: '10px',
-    },
-    section: {
-      marginBottom: '20px',
-    },
-    sectionTitle: {
-      fontSize: '16px',
-      fontWeight: 'bold',
-      marginBottom: '10px',
-      color: '#444',
-    },
-    barContainer: {
-      height: '25px',
-      backgroundColor: '#f0f0f0',
-      borderRadius: '4px',
-      marginBottom: '15px',
-      overflow: 'hidden',
-      display: 'flex',
-    },
-    bar: {
-      height: '100%',
-      display: 'flex',
-      alignItems: 'center',
-      justifyContent: 'center',
-      color: 'white',
-      fontWeight: 'bold',
-      fontSize: '12px',
-      transition: 'width 0.3s ease',
-    },
-    positiveBar: {
-      backgroundColor: 'rgba(0, 180, 0, 0.8)',
-    },
-    neutralBar: {
-      backgroundColor: 'rgba(255, 204, 0, 0.8)',
-    },
-    negativeBar: {
-      backgroundColor: 'rgba(220, 0, 0, 0.8)',
-    },
-    statGrid: {
-      display: 'grid',
-      gridTemplateColumns: 'repeat(2, 1fr)',
-      gap: '10px',
-      marginTop: '15px',
-    },
-    statItem: {
-      backgroundColor: '#f9f9f9',
-      padding: '10px',
-      borderRadius: '4px',
-      display: 'flex',
-      flexDirection: 'column',
-    },
-    statLabel: {
-      fontSize: '12px',
-      color: '#666',
-    },
-    statValue: {
-      fontSize: '18px',
-      fontWeight: 'bold',
-      color: '#333',
-    },
-    comparisonSection: {
-      marginTop: '20px',
-      padding: '15px',
-      backgroundColor: '#f5f5f5',
-      borderRadius: '6px',
-    },
-  };
+function DetailedSentimentPanel({ country, sentimentData, onClose }) {
+  const dialogRef = useRef(null)
+  const closeRef = useRef(null)
+  const previousFocus = useRef(null)
 
-  // Calculate overall sentiment score
-  const overallScore = sentimentData.positive - sentimentData.negative;
-  
-  // Determine sentiment status
-  const getSentimentStatus = () => {
-    if (overallScore > 30) return { text: 'Very Positive', color: '#00a000' };
-    if (overallScore > 10) return { text: 'Positive', color: '#00c000' };
-    if (overallScore > -10) return { text: 'Neutral', color: '#cccc00' };
-    if (overallScore > -30) return { text: 'Negative', color: '#c00000' };
-    return { text: 'Very Negative', color: '#a00000' };
-  };
-  
-  const sentimentStatus = getSentimentStatus();
+  useEffect(() => {
+    previousFocus.current = document.activeElement
+    closeRef.current?.focus()
+    const handleKeyDown = (event) => {
+      if (event.key === 'Escape') onClose()
+      if (event.key !== 'Tab') return
+      const focusable = dialogRef.current?.querySelectorAll(focusableSelector)
+      if (!focusable?.length) return
+      const first = focusable[0]
+      const last = focusable[focusable.length - 1]
+      if (event.shiftKey && document.activeElement === first) {
+        event.preventDefault()
+        last.focus()
+      } else if (!event.shiftKey && document.activeElement === last) {
+        event.preventDefault()
+        first.focus()
+      }
+    }
+    document.addEventListener('keydown', handleKeyDown)
+    return () => {
+      document.removeEventListener('keydown', handleKeyDown)
+      previousFocus.current?.focus?.()
+    }
+  }, [onClose])
+
+  if (!country || !sentimentData) return null
+  const score = sentimentData.positive - sentimentData.negative
+  const dominant = sentimentData.positive >= sentimentData.negative && sentimentData.positive >= sentimentData.neutral
+    ? 'Positive' : sentimentData.negative > sentimentData.neutral ? 'Negative' : 'Neutral'
 
   return (
-    <div style={styles.overlay} onClick={onClose}>
-      <div style={styles.panel} onClick={(e) => e.stopPropagation()}>
-        <button style={styles.closeButton} onClick={onClose}>×</button>
-        
-        <div style={styles.header}>
-          <div style={styles.title}>{countryName}</div>
-          <div style={styles.subtitle}>Region: {sentimentData.region}</div>
+    <div className="detailed-panel-overlay" role="presentation" onMouseDown={(event) => event.target === event.currentTarget && onClose()}>
+      <section className="detailed-panel" role="dialog" aria-modal="true" aria-labelledby="country-dialog-title" ref={dialogRef}>
+        <button className="detailed-panel-close" ref={closeRef} type="button" onClick={onClose} aria-label="Close country details">×</button>
+        <h2 id="country-dialog-title">{sentimentData.name}</h2>
+        <p className="dialog-subtitle">{sentimentData.region} · ISO-3 {sentimentData.iso3}</p>
+        <div className="sentiment-bar-container" aria-label="Sentiment breakdown">
+          <div className="sentiment-bar sentiment-bar-positive" style={{ width: `${sentimentData.positive}%` }}>{sentimentData.positive}%</div>
+          <div className="sentiment-bar sentiment-bar-neutral" style={{ width: `${sentimentData.neutral}%` }}>{sentimentData.neutral}%</div>
+          <div className="sentiment-bar sentiment-bar-negative" style={{ width: `${sentimentData.negative}%` }}>{sentimentData.negative}%</div>
         </div>
-        
-        <div style={styles.section}>
-          <div style={styles.sectionTitle}>Sentiment Breakdown</div>
-          
-          <div>
-            <div style={{display: 'flex', justifyContent: 'space-between', marginBottom: '5px'}}>
-              <span>Positive</span>
-              <span>{sentimentData.positive}%</span>
-            </div>
-            <div style={styles.barContainer}>
-              <div 
-                style={{
-                  ...styles.bar, 
-                  ...styles.positiveBar,
-                  width: `${sentimentData.positive}%`
-                }}
-              >
-                {sentimentData.positive > 10 ? `${sentimentData.positive}%` : ''}
-              </div>
-            </div>
-          </div>
-          
-          <div>
-            <div style={{display: 'flex', justifyContent: 'space-between', marginBottom: '5px'}}>
-              <span>Neutral</span>
-              <span>{sentimentData.neutral}%</span>
-            </div>
-            <div style={styles.barContainer}>
-              <div 
-                style={{
-                  ...styles.bar, 
-                  ...styles.neutralBar,
-                  width: `${sentimentData.neutral}%`
-                }}
-              >
-                {sentimentData.neutral > 10 ? `${sentimentData.neutral}%` : ''}
-              </div>
-            </div>
-          </div>
-          
-          <div>
-            <div style={{display: 'flex', justifyContent: 'space-between', marginBottom: '5px'}}>
-              <span>Negative</span>
-              <span>{sentimentData.negative}%</span>
-            </div>
-            <div style={styles.barContainer}>
-              <div 
-                style={{
-                  ...styles.bar, 
-                  ...styles.negativeBar,
-                  width: `${sentimentData.negative}%`
-                }}
-              >
-                {sentimentData.negative > 10 ? `${sentimentData.negative}%` : ''}
-              </div>
-            </div>
-          </div>
-        </div>
-        
-        <div style={styles.statGrid}>
-          <div style={styles.statItem}>
-            <span style={styles.statLabel}>Overall Sentiment</span>
-            <span style={{...styles.statValue, color: sentimentStatus.color}}>
-              {sentimentStatus.text}
-            </span>
-          </div>
-          <div style={styles.statItem}>
-            <span style={styles.statLabel}>Sentiment Score</span>
-            <span style={styles.statValue}>{overallScore}</span>
-          </div>
-          <div style={styles.statItem}>
-            <span style={styles.statLabel}>Positive to Negative Ratio</span>
-            <span style={styles.statValue}>
-              {sentimentData.negative === 0 
-                ? '∞' 
-                : (sentimentData.positive / sentimentData.negative).toFixed(1)}
-            </span>
-          </div>
-          <div style={styles.statItem}>
-            <span style={styles.statLabel}>Dominant Sentiment</span>
-            <span style={styles.statValue}>
-              {sentimentData.positive > sentimentData.neutral && sentimentData.positive > sentimentData.negative
-                ? 'Positive'
-                : sentimentData.negative > sentimentData.neutral && sentimentData.negative > sentimentData.positive
-                  ? 'Negative'
-                  : 'Neutral'}
-            </span>
-          </div>
-        </div>
-        
-        <div style={styles.comparisonSection}>
-          <div style={styles.sectionTitle}>Regional Context</div>
-          <p style={{fontSize: '14px', lineHeight: '1.5'}}>
-            {countryName} shows {overallScore > 0 ? 'positive' : overallScore < 0 ? 'negative' : 'neutral'} sentiment 
-            overall, with {sentimentData.positive}% positive responses. This is 
-            {sentimentData.positive > 60 ? ' above average' : sentimentData.positive < 50 ? ' below average' : ' average'} 
-            for the {sentimentData.region} region.
-          </p>
-        </div>
-      </div>
+        <dl className="dialog-stats">
+          <div><dt>Overall score</dt><dd>{score}</dd></div>
+          <div><dt>Dominant sentiment</dt><dd>{dominant}</dd></div>
+          <div><dt>Sample size</dt><dd>{sentimentData.sampleSize.toLocaleString()}</dd></div>
+        </dl>
+        <p className="dialog-source">Source: {sentimentData.source} · Updated {sentimentData.updatedAt}</p>
+      </section>
     </div>
-  );
-};
+  )
+}
 
-export default DetailedSentimentPanel;
+export default DetailedSentimentPanel

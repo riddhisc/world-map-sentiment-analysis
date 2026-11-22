@@ -61,10 +61,10 @@ const SentimentControls = ({ activeSentiment, onSentimentChange, disabled = fals
   };
 
   const sentimentOptions = [
-    { id: 'overall', label: 'Overall', icon: '📊' },
-    { id: 'positive', label: 'Positive', icon: '✓' },
-    { id: 'neutral', label: 'Neutral', icon: '○' },
-    { id: 'negative', label: 'Negative', icon: '✗' },
+    { id: 'overall', label: 'Overall' },
+    { id: 'positive', label: 'Positive' },
+    { id: 'neutral', label: 'Neutral' },
+    { id: 'negative', label: 'Negative' },
   ];
 
   return (
@@ -91,7 +91,7 @@ const SentimentControls = ({ activeSentiment, onSentimentChange, disabled = fals
             disabled={disabled}
             title={`Show ${option.label} Sentiment`}
           >
-            <span style={controlStyles.buttonIcon}>{option.icon}</span>
+            <span className={`sentiment-dot dot-${option.id}`} aria-hidden="true" />
             {option.label}
           </button>
         );

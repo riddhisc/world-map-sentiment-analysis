@@ -27,3 +27,9 @@ export const getSentimentColor = (type, value, data) => {
   if (type === 'negative') return `rgba(${Math.round(150 + intensity * 80)}, 70, 85, 0.85)`
   return '#d9dee5'
 }
+
+export const getOverallColor = (score) => getSentimentColor('overall', 0, {
+  positive: Math.max(0, score),
+  neutral: 0,
+  negative: Math.max(0, -score),
+})

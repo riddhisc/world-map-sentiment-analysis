@@ -1,4 +1,5 @@
 import React from 'react';
+import { getOverallColor } from '../data/sentimentData';
 
 const Legend = ({ sentimentType }) => {
   const legendStyles = {
@@ -118,19 +119,19 @@ const Legend = ({ sentimentType }) => {
           <>
             <div style={legendStyles.title}>Overall Sentiment</div>
             <div style={legendStyles.row}>
-              <div style={{ ...legendStyles.colorBox, backgroundColor: 'rgba(192, 57, 43, 0.85)' }}></div>
-              <div style={legendStyles.label}>Negative Dominant</div>
+              <div style={{ ...legendStyles.colorBox, backgroundColor: getOverallColor(-100) }}></div>
+              <div style={legendStyles.label}>-100 negative</div>
             </div>
             <div style={legendStyles.row}>
-              <div style={{ ...legendStyles.colorBox, backgroundColor: 'rgba(243, 156, 18, 0.85)' }}></div>
-              <div style={legendStyles.label}>Neutral Dominant</div>
+              <div style={{ ...legendStyles.colorBox, backgroundColor: getOverallColor(0) }}></div>
+              <div style={legendStyles.label}>0 neutral</div>
             </div>
             <div style={legendStyles.row}>
-              <div style={{ ...legendStyles.colorBox, backgroundColor: 'rgba(39, 174, 96, 0.85)' }}></div>
-              <div style={legendStyles.label}>Positive Dominant</div>
+              <div style={{ ...legendStyles.colorBox, backgroundColor: getOverallColor(100) }}></div>
+              <div style={legendStyles.label}>+100 positive</div>
             </div>
             <div style={legendStyles.footer}>
-              Countries are colored based on their dominant sentiment
+              Countries use net sentiment: positive minus negative
             </div>
           </>
         );
